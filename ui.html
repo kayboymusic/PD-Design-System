@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AI Avatar Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      color: #333;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      max-width: 100%;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #2d3748;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      transition: border-color 0.2s ease;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .color-input {
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .generate-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 20px;
+    }
+
+    .generate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .generate-btn:active {
+      transform: translateY(0);
+    }
+
+    .preview-section {
+      margin-top: 20px;
+      padding: 16px;
+      background: #f7fafc;
+      border-radius: 10px;
+      border: 2px dashed #cbd5e0;
+    }
+
+    .preview-text {
+      font-size: 12px;
+      color: #718096;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row .form-group {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 AI Avatar Generator</h1>
+    
+    <form id="avatarForm">
+      <div class="form-group">
+        <label for="gender">Gender</label>
+        <select id="gender" name="gender">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="non-binary">Non-binary</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="expression">Expression</label>
+        <select id="expression" name="expression">
+          <option value="happy">Happy</option>
+          <option value="neutral">Neutral</option>
+          <option value="serious">Serious</option>
+          <option value="friendly">Friendly</option>
+          <option value="confident">Confident</option>
+          <option value="thoughtful">Thoughtful</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="hair">Hair Style</label>
+        <select id="hair" name="hair">
+          <option value="short">Short</option>
+          <option value="long">Long</option>
+          <option value="curly">Curly</option>
+          <option value="wavy">Wavy</option>
+          <option value="braided">Braided</option>
+          <option value="pixie cut">Pixie Cut</option>
+          <option value="bob">Bob</option>
+          <option value="bald">Bald</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label for="outfitColor">Outfit Color</label>
+          <input type="color" id="outfitColor" name="outfitColor" value="#4299e1" class="color-input">
+        </div>
+        
+        <div class="form-group">
+          <label for="bgColor">Background</label>
+          <input type="color" id="bgColor" name="bgColor" value="#f7fafc" class="color-input">
+        </div>
+      </div>
+
+      <div class="preview-section">
+        <div class="preview-text" id="promptPreview">
+          Configure options above to see the AI prompt preview
+        </div>
+      </div>
+
+      <button type="submit" class="generate-btn">
+        ✨ Generate Avatar
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('avatarForm');
+    const promptPreview = document.getElementById('promptPreview');
+
+    // Color name mapping for better readability
+    const colorNames = {
+      '#4299e1': 'blue',
+      '#48bb78': 'green', 
+      '#ed8936': 'orange',
+      '#9f7aea': 'purple',
+      '#f56565': 'red',
+      '#38b2ac': 'teal',
+      '#ecc94b': 'yellow',
+      '#718096': 'gray',
+      '#2d3748': 'dark',
+      '#f7fafc': 'light'
+    };
+
+    function getColorName(hex) {
+      return colorNames[hex] || hex;
+    }
+
+    function updatePreview() {
+      const formData = new FormData(form);
+      const options = {
+        gender: formData.get('gender'),
+        expression: formData.get('expression'),
+        hair: formData.get('hair'),
+        outfitColor: getColorName(formData.get('outfitColor')),
+        bgColor: getColorName(formData.get('bgColor'))
+      };
+
+      const prompt = `Flat-style illustrated avatar of a ${options.gender} character, ${options.expression} expression, soft facial features, clean pastel gradients, minimalistic vector design, round face with no outlines, smooth shading, simple ${options.hair} hairstyle and ${options.outfitColor} outfit, ${options.bgColor} background, flat vector style, high quality, 1:1 aspect ratio`;
+      
+      promptPreview.textContent = prompt;
+    }
+
+    // Update preview when form changes
+    form.addEventListener('input', updatePreview);
+    form.addEventListener('change', updatePreview);
+
+    // Initial preview update
+    updatePreview();
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const options = {
+        gender: formData.get('gender'),
+        expression: formData.get('expression'),
+        hair: formData.get('hair'),
+        outfitColor: getColorName(formData.get('outfitColor')),
+        bgColor: getColorName(formData.get('bgColor'))
+      };
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'generate-avatar',
+          options: options
+        }
+      }, '*');
+    });
+  </script>
+</body>
+</html>
